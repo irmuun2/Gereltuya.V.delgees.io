@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Бэлгийн хайрцагны цех</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pangolin&family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+:root{
+  --kraft:#d8b78a; --kraft-d:#b48a57; --kraft-dd:#7a5530; --kraft-l:#efdcbc;
+  --ink:#3a2412; --muted:#6e5137; --card:#fffaf0; --line:#e6d3b3;
+  --red:#c4162a; --red-d:#8f0e1d; --red-soft:#f8d3d7;
+  --gold:#d9a21b; --gold-d:#a77a07; --gold-soft:#fbeab5;
+  --grn:#2f8f5b; --grn-d:#1f6b42; --grn-soft:#d3eedf;
+  --bad:#d02a2a;
+  --shadow:0 10px 24px rgba(74,44,14,.22);
+  --hfont:"Pangolin","Nunito",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{color:var(--ink);font-family:"Nunito","Segoe UI",system-ui,sans-serif;font-size:20px;line-height:1.4;overflow:hidden;background-color:var(--kraft);
+  background-image:radial-gradient(rgba(122,85,48,.18) 3px,transparent 3.5px),radial-gradient(rgba(255,255,255,.18) 3px,transparent 3.5px);
+  background-size:44px 44px,44px 44px;background-position:0 0,22px 22px}
+button{font:inherit;cursor:pointer}
+
+/* ===== Header: red ribbon ===== */
+.top{position:fixed;inset:0 0 auto 0;height:64px;display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;z-index:20;background:var(--red);color:#fff;
+  border-bottom:6px solid var(--gold);box-shadow:0 3px 0 var(--red-d)}
+.tb{display:flex;align-items:center;gap:10px;padding:0 16px}
+.tb.mid{min-width:0;overflow:hidden;border-left:2px dashed rgba(255,255,255,.4)}
+.tb .lbl{font-size:12px;letter-spacing:1px;color:#ffd9de;display:block}
+.tb .val{font-family:var(--hfont);font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.cycle{display:flex;gap:4px}
+.cycle span{font-size:13px;font-weight:800;padding:3px 8px;border-radius:12px;border:1.5px solid rgba(255,255,255,.45);color:#ffe3e6;white-space:nowrap}
+.cycle span.done{background:rgba(255,255,255,.18);color:#fff}
+.cycle span.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.timer{font-family:var(--hfont);font-size:25px;font-variant-numeric:tabular-nums;color:#ffe9a8;cursor:default}
+.timer.warn{color:#ffb347}.timer.over{color:#fff;background:var(--red-d);padding:0 6px;border-radius:6px}
+.tbtn{border:1.5px solid rgba(255,255,255,.5);background:transparent;border-radius:8px;padding:3px 10px;font-weight:800;font-size:16px;color:#fff}
+.tbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ===== Slides ===== */
+.deck{position:absolute;inset:76px 0 70px 0;z-index:1}
+.slide{position:absolute;inset:0;overflow:hidden;padding:8px clamp(14px,3.5vw,48px) 10px;opacity:0;visibility:hidden;transform:scale(.97);transition:opacity .35s,transform .35s,visibility .35s}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.inner{max-width:1280px;margin:0 auto;height:100%}
+h2{font-family:var(--hfont);font-weight:400;font-size:clamp(28px,3vw,40px);margin:0 0 6px;color:var(--red-d);display:flex;align-items:center;gap:10px;line-height:1.1}
+h3{font-size:21px;margin:0 0 6px;font-weight:900}
+.tag{display:inline-block;font-family:var(--hfont);font-size:18px;color:#fff;background:var(--red);padding:1px 16px 1px 12px;margin-bottom:4px;position:relative;
+  clip-path:polygon(0 0,100% 0,92% 50%,100% 100%,0 100%)}
+.tag b{color:var(--gold-soft);font-weight:400}
+.card{background:var(--card);border-radius:10px;box-shadow:var(--shadow);padding:14px 18px;position:relative;border:2px dashed var(--kraft-d);outline:6px solid var(--card)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:none;border-radius:10px;padding:9px 16px;font-weight:800;background:var(--red);color:#fff;box-shadow:0 4px 0 var(--red-d);transition:transform .1s,filter .15s}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--red-d)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.gold{background:var(--gold);color:var(--ink);box-shadow:0 4px 0 var(--gold-d)}
+.btn.grn{background:var(--grn);box-shadow:0 4px 0 var(--grn-d)}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:none}
+.btn.ghost.on{background:var(--gold-soft);border-color:var(--gold-d)}
+.btn.sm{padding:6px 12px;font-size:17px}
+.muted{color:var(--muted)}
+.def{padding:8px 12px;margin:6px 0;background:var(--red-soft);border-left:6px solid var(--red);border-radius:0 8px 8px 0}
+.def.y{background:var(--gold-soft);border-color:var(--gold-d)}.def.g{background:var(--grn-soft);border-color:var(--grn)}
+.formula{font-family:var(--hfont);font-size:30px;text-align:center;padding:6px 10px;background:var(--red);color:#fff;margin:8px 0;border-radius:10px;border:3px solid var(--gold)}
+.feedback{font-size:19px;font-weight:800;min-height:28px;margin-top:6px}
+.feedback.ok{color:var(--grn-d)}.feedback.no{color:var(--bad)}
+.calc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-weight:800}
+.calc input{width:110px;font:inherit;font-size:22px;text-align:center;border:2px solid var(--kraft-d);border-radius:8px;padding:2px 4px;background:#fff}
+.calc input.ok{border-color:var(--grn);background:var(--grn-soft)}.calc input.no{border-color:var(--bad);background:#ffe8e8}
+.ans{display:none}.ans.show{display:block}
+input[type=range]{accent-color:var(--red)}
+
+/* ===== Nav ===== */
+.nav{position:fixed;inset:auto 0 0 0;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:20;gap:10px;background:var(--red);border-top:6px solid var(--gold)}
+.nav .btn{background:#fff;color:var(--red-d);box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dot{width:38px;height:32px;border:2px solid rgba(255,255,255,.5);border-radius:6px;background:transparent;color:#fff;font-weight:800;font-size:15px;position:relative}
+.dot.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.dot.done{background:rgba(255,255,255,.2)}
+.tnotes{position:fixed;right:18px;bottom:76px;width:min(440px,calc(100vw - 36px));background:#fffdf3;border:3px solid var(--gold);border-radius:10px;padding:12px 16px;font-size:16px;box-shadow:var(--shadow);z-index:25;display:none;max-height:calc(100vh - 170px);overflow:auto}
+.tnotes.show{display:block}
+.tnotes h4{margin:0 0 6px;font-size:17px}
+.tnotes ul{margin:0;padding-left:20px}
+
+/* ===== Intro gift ===== */
+.intro{height:100%;display:flex;align-items:center;justify-content:center}
+.gift{position:relative;width:min(960px,100%);background:var(--red);color:#fff;border-radius:16px;box-shadow:0 22px 50px rgba(74,44,14,.4);overflow:hidden;
+  background-image:radial-gradient(rgba(255,255,255,.22) 7px,transparent 7.5px);background-size:46px 46px}
+.gift::before{content:"";position:absolute;left:calc(50% - 30px);top:0;bottom:0;width:60px;background:linear-gradient(90deg,var(--gold-d),var(--gold) 30%,#ffe08a 50%,var(--gold) 70%,var(--gold-d))}
+.gift::after{content:"";position:absolute;top:calc(50% - 30px);left:0;right:0;height:60px;background:linear-gradient(var(--gold-d),var(--gold) 30%,#ffe08a 50%,var(--gold) 70%,var(--gold-d))}
+.tagcard{position:relative;z-index:2;margin:44px auto;width:min(720px,88%);background:var(--card);color:var(--ink);border-radius:14px;padding:22px 30px 18px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);border:3px dashed var(--kraft-d)}
+.tagcard .bow{font-size:58px;line-height:1;margin-top:-6px}
+.tagcard .school{font-weight:900;font-size:22px;color:var(--muted)}
+.tagcard .subject{font-family:var(--hfont);font-size:clamp(48px,6.5vw,84px);line-height:1;color:var(--red)}
+.tagcard .topic{font-family:var(--hfont);font-size:clamp(26px,3vw,38px);color:var(--kraft-dd);margin:8px 0 10px}
+.tagcard .teacher{display:inline-block;font-weight:900;font-size:22px;background:var(--gold-soft);border:2px solid var(--gold);border-radius:30px;padding:4px 20px}
+.tagcard .tools{font-size:30px;margin-top:8px;letter-spacing:8px}
+
+/* ===== Challenge ===== */
+.letter{background:#fffdf5;box-shadow:var(--shadow);padding:16px 22px;border-radius:6px;position:relative;border-top:10px solid var(--red);font-size:19px}
+.letter::after{content:"🎀";position:absolute;top:-30px;right:20px;font-size:40px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.steps div{flex:1;min-width:110px;text-align:center;background:var(--kraft-l);border:2px solid var(--kraft-d);border-radius:10px;padding:5px 4px;font-weight:800;font-size:15px}
+.steps div b{display:block;font-size:24px}
+.boxes3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.bx3{background:#fff;border:3px solid var(--line);border-radius:10px;padding:6px;text-align:center;font-weight:800;cursor:pointer;font-size:17px}
+.bx3 svg{width:100%;height:96px;display:block}
+.bx3.on{border-color:var(--red);background:var(--red-soft)}
+.counter{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.counter div{background:#fff;border:2px solid var(--line);border-radius:10px;padding:4px;text-align:center;font-weight:800;font-size:17px}
+.counter .n{font-family:var(--hfont);font-size:32px;color:var(--red-d);display:block;line-height:1.1}
+.counter button{border:none;background:var(--gold-soft);border-radius:6px;font-weight:900;width:34px;height:30px;margin:0 2px}
+.counter div.ok{border-color:var(--grn);background:var(--grn-soft)}
+.counter div.no{border-color:var(--bad);background:#ffe8e8}
+
+/* ===== 3D box ===== */
+.stage{position:relative;height:calc(100vh - 290px);max-height:470px;min-height:300px;perspective:1100px;background:var(--kraft-l);border-radius:12px;overflow:hidden;
+  background-image:radial-gradient(rgba(180,138,87,.35) 2px,transparent 2.5px);background-size:22px 22px;border:3px solid var(--kraft-d)}
+.world{position:absolute;left:50%;top:56%;width:0;height:0;transform-style:preserve-3d}
+.face{position:absolute;transform-style:preserve-3d;border:2px solid var(--kraft-dd);cursor:pointer;
+  background-color:#e9cfa6;background-image:radial-gradient(rgba(196,22,42,.55) 4px,transparent 4.5px);background-size:20px 20px;
+  display:flex;align-items:center;justify-content:center;transition:background-color .3s}
+.face .lab{background:rgba(255,250,240,.92);border-radius:6px;padding:0 6px;font-weight:900;font-size:15px;pointer-events:none;text-align:center;line-height:1.15}
+.face.sel{outline:4px solid var(--ink);outline-offset:-4px}
+.face.pA{background-color:#f19aa4}.face.pB{background-color:#f5d36c}.face.pC{background-color:#8fd3ac}
+.face.shake{animation:sh .4s}
+@keyframes sh{25%{background-color:#ff6b6b}75%{background-color:#ff6b6b}}
+.ctrlbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px;font-weight:800;font-size:17px}
+.ctrlbar input[type=range]{flex:1;min-width:120px}
+.pairs{display:flex;gap:8px;margin:6px 0}
+.pairs span{flex:1;text-align:center;border-radius:8px;padding:4px;font-weight:800;font-size:16px;background:#fff;border:2px dashed var(--line)}
+.pairs span.pA{background:#f19aa4;border-style:solid}.pairs span.pB{background:#f5d36c;border-style:solid}.pairs span.pC{background:#8fd3ac;border-style:solid}
+
+/* ===== Net cards ===== */
+.ncards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.nc{background:#fff;border:3px solid var(--line);border-radius:12px;padding:6px;text-align:center}
+.nc svg{width:100%;height:calc((100vh - 400px)/2);max-height:150px;min-height:80px;display:block}
+.nc .lt{font-family:var(--hfont);font-size:22px;color:var(--red-d)}
+.nc .row{justify-content:center;gap:6px}
+.nc button{border:2px solid var(--line);background:#fff;border-radius:8px;font-weight:900;padding:3px 10px;font-size:16px}
+.nc.ok{border-color:var(--grn);background:var(--grn-soft)}
+.nc.no{border-color:var(--bad);background:#ffe8e8}
+
+/* ===== Grid maker ===== */
+.mgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;width:min(100%,calc(100vh - 330px));max-width:430px;margin:0 auto;aspect-ratio:1;padding:8px;background:var(--kraft-l);border-radius:12px;border:3px solid var(--kraft-d)}
+.mgrid button{border:2px dashed var(--kraft-d);background:rgba(255,255,255,.55);border-radius:6px;font-weight:900;font-size:15px;padding:0;line-height:1.05;color:var(--ink)}
+.mgrid button.on{border-style:solid;border-color:var(--kraft-dd);background-color:#e9cfa6;background-image:radial-gradient(rgba(196,22,42,.5) 3px,transparent 3.5px);background-size:14px 14px}
+.mgrid button.fA{background-color:#f19aa4}.mgrid button.fB{background-color:#f5d36c}.mgrid button.fC{background-color:#8fd3ac}
+.mgrid button.dup{outline:4px solid var(--bad);outline-offset:-4px}
+.mgrid button.pop{animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.15)}}
+.found{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.found span{width:30px;height:30px;border-radius:6px;border:2px dashed var(--kraft-d);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;background:#fff}
+.found span.on{background:var(--gold);border:2px solid var(--gold-d)}
+
+/* ===== Calculator ===== */
+.netsvg{width:100%;height:calc(100vh - 300px);max-height:470px;display:block;background:var(--kraft-l);border-radius:12px;border:3px solid var(--kraft-d)}
+.sl{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;font-weight:800;font-size:18px}
+.sl b{font-family:var(--hfont);font-size:24px;color:var(--red-d);min-width:56px;text-align:right}
+.atab{width:100%;border-collapse:collapse;font-size:18px;margin-top:6px}
+.atab td{padding:4px 6px;border-bottom:1px dashed var(--line)}
+.atab tr{cursor:pointer}
+.atab tr.hl td{background:var(--gold-soft)}
+.sw{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:4px;border:1px solid rgba(0,0,0,.3)}
+.total{font-family:var(--hfont);font-size:26px;text-align:center;background:var(--red);color:#fff;border-radius:10px;padding:4px;margin-top:6px}
+
+/* ===== Improve ===== */
+.vbtns{display:flex;flex-wrap:wrap;gap:6px}
+.vbtns button{border:2px solid var(--line);background:#fff;border-radius:8px;font-weight:900;font-size:16px;padding:4px 10px}
+.vbtns button.on{border-color:var(--red);background:var(--red-soft)}
+.vbtns button.seen::after{content:" ✓";color:var(--grn)}
+.boxsvg{width:100%;height:calc(100vh - 470px);min-height:150px;max-height:260px;display:block}
+.bars{width:100%;height:auto;display:block;max-height:150px}
+
+/* ===== Practice ===== */
+.lvl{display:flex;gap:8px;margin-bottom:8px}
+.pq{font-size:22px;font-weight:800;min-height:64px}
+.score{font-family:var(--hfont);font-size:26px;color:var(--red-d)}
+.mini svg{width:100%;max-height:170px;height:auto;display:block}
+
+/* ===== Exit ===== */
+.exq{background:#fff;border:2px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:8px}
+.exq .q{font-weight:800;font-size:18px}
+.stars3{display:flex;gap:10px}
+.stars3 button{font-size:40px;border:none;background:none;filter:grayscale(1);opacity:.4;transition:.2s}
+.stars3 button.on{filter:none;opacity:1;transform:scale(1.1)}
+.frames .fr{display:flex;align-items:baseline;gap:8px;margin:6px 0;font-weight:800;font-size:18px;flex-wrap:wrap}
+.frames .fr div[contenteditable]{flex:1;min-width:200px;border-bottom:2px dashed var(--red);outline:none;padding:2px 6px;font-weight:600;color:var(--red-d)}
+.frames .fr div[contenteditable]:empty::before{content:attr(data-ph);color:#b9a184}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+
+@media (max-height:900px){
+  body{font-size:18px}
+  h2{font-size:28px;margin-bottom:4px}
+  .card{padding:10px 14px}
+  .def{padding:5px 10px;margin:4px 0}
+  .formula{font-size:24px;padding:3px;margin:5px 0}
+  .letter{font-size:18px;padding:12px 18px}
+  .tagcard{margin:26px auto;padding:16px 24px 14px}
+  .bx3 svg{height:72px}
+  .counter .n{font-size:26px}
+  .pq{font-size:20px;min-height:54px}
+  .atab{font-size:17px}
+  .exq{padding:5px 10px;margin-bottom:5px}
+  .steps div{font-size:14px;padding:3px}
+  .steps div b{font-size:20px}
+}
+@media (max-width:1000px){
+  .cycle{display:none}
+  .grid2{grid-template-columns:1fr !important}
+  .ncards{grid-template-columns:repeat(2,1fr)}
+  .dots{display:none}
+  .slide{overflow:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="tb"><span><span class="lbl">Хичээл</span><span class="val">🎁 Математик · 5-р анги</span></span></div>
+  <div class="tb mid"><span style="min-width:0"><span class="lbl">Бэлгийн хайрцагны цех · <span id="stepNo">1/9</span></span><span class="val" id="stageName"></span></span></div>
+  <div class="tb">
+    <div class="cycle" id="cycle"><span data-s="ch">① Сорилт</span><span data-s="ex">② Судлах</span><span data-s="mk">③ Бүтээх</span><span data-s="ts">④ Турших</span><span data-s="im">⑤ Сайжруулах</span></div>
+    <div class="timer" id="timer" title="Үлдсэн хугацаа (2 удаа дарвал 40:00 болно)">⏱ <span id="tval">40:00</span></div>
+    <button class="tbtn" id="tPlay" title="Цаг эхлүүлэх / зогсоох">▶</button>
+    <button class="tbtn" id="notesBtn" title="Багшийн тэмдэглэл (N)">📝</button>
+    <button class="tbtn" id="fsBtn" title="Бүтэн дэлгэц (F)">⛶</button>
+  </div>
+</header>
+
+<main class="deck">
+
+<!-- 0. Intro -->
+<section class="slide" data-name="Танилцуулга" data-min="1" data-stage=""
+  data-notes="Хүүхдүүдтэй мэндэлж, өнөөдөр бид “Бэлгийн хайрцагны цех”-ийн урчууд болно гэж хэлнэ.|Цехийн 5 алхам: Сорилт → Судлах → Бүтээх → Турших → Сайжруулах (дээд мөрөнд харагдана).|Боломжтой бол өнгийн/хатуу цаас, хайч, шугам, цавуу бэлдээрэй — сурах бичгийн 112-р хуудасны үйл ажиллагааны дагуу жинхэнэ дэлгээс хайчилж нугалах боломжтой.|▶ товчоор 40 минутын цагийг эхлүүлнэ.">
+  <div class="inner intro">
+    <div class="gift">
+      <div class="tagcard">
+        <div class="bow">🎀</div>
+        <div class="school">🏫 1-р сургууль</div>
+        <div class="subject">Математик</div>
+        <div class="topic">Биетийн дэлгээс, гадаргуугийн талбайг олох</div>
+        <div class="teacher">👩‍🏫 Багш: В. Гэрэлтуяа</div>
+        <div class="tools">✂️📏✏️📦🎁</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 1. Challenge -->
+<section class="slide" data-name="Сорилт: Хамгийн бага цаасаар боох" data-min="3" data-stage="ch"
+  data-notes="Захидлыг чангаар уншина. Цехэд 24 ширхэг шоо чихэр (1 см ирмэгтэй) ирсэн. Тэдгээрийг 3 янзын хайрцагт хийж болно.|Хүүхдүүд аль хайрцаг хамгийн бага цаас шаардахыг ТААМАГЛАНА (дарж сонгоно). Хариуг “Сайжруулах” алхамд шалгана. (Зөв хариу: В — 2×3×4, 52 см.кв.)|Дулаацал (х.112): хайрцаг хэдэн талс, орой, ирмэгтэй вэ? Талс 6, орой 8, ирмэг 12. +/− товчоор оруулаад “Шалгах”.">
+  <div class="inner">
+    <span class="tag">Алхам ① <b>Сорилт</b></span>
+    <h2>📨 Цехэд захиалга ирлээ!</h2>
+    <div class="grid2" style="grid-template-columns:1.05fr .95fr;align-items:start">
+      <div>
+        <div class="letter">
+          Сайн байцгаана уу, бяцхан урчууд аа!<br>
+          Манай дэлгүүрт <b>24 шоо чихэр</b> ирлээ. Тэднийг нэг хайрцагт хийгээд <b>бэлгийн цаасаар</b> боох хэрэгтэй.
+          Цаас үнэтэй тул <b>хамгийн бага цаас</b> орох хайрцгийг сонгож өгөөрэй! 🎁
+          <div style="text-align:right;font-style:italic;margin-top:4px">— Бэлгийн дэлгүүрийн эзэн Сараа эгч</div>
+        </div>
+        <div class="steps">
+          <div><b>🎯</b>Сорилт</div><div><b>🔍</b>Судлах</div><div><b>✂️</b>Бүтээх</div><div><b>📏</b>Турших</div><div><b>🔧</b>Сайжруулах</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🤔 Таны таамаг: аль нь хамгийн бага цаас шаардах вэ?</h3>
+        <div class="boxes3" id="guess"></div>
+        <div class="feedback" id="guessFb" style="font-size:17px"></div>
+        <h3 style="margin-top:4px">📦 Хайрцаг хэдэн … вэ? <span class="muted" style="font-size:16px">(х.112)</span></h3>
+        <div class="counter" id="cnt"></div>
+        <div class="row" style="margin-top:6px"><button class="btn sm" id="cntChk">✓ Шалгах</button><span class="feedback" id="cntFb" style="margin:0"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Explore 3D -->
+<section class="slide" data-name="Судлах: Хайрцгийг дэлгэе" data-min="6" data-stage="ex"
+  data-notes="Гулсуураар хайрцгийг дэлгэж, буцааж нугална. “Дэлгээс” гэдэг нь биетийн бүх талсыг хавтгай дээр нээж тавьсан дүрс.|Тоглоом: нэг талс дээр дараад, түүний ЭСРЭГ (хэзээ ч хүрэлцдэггүй) талсыг дарна. Зөв бол хоёулаа нэг өнгөөр будагдана. 3 хосыг олно.|Асуулт: эсрэг талсууд ямар хэмжээтэй вэ? → Тэнцүү! (х.112: “хос хосоороо тэнцүү тэгш өнцөгтүүд”).|Энэ хайрцаг 4×3×2 см: 12+12+8+8+6+6 = 52 см.кв. Жинхэнэ хайрцаг (шүдний оо, цайны хайрцаг) авчирч дэлгэж үзүүлбэл бүр сайн.">
+  <div class="inner">
+    <span class="tag">Алхам ② <b>Судлах</b></span>
+    <h2>🔍 Хайрцгийг задлаад харъя — дэлгээс</h2>
+    <div class="grid2" style="grid-template-columns:1.25fr .75fr;align-items:start">
+      <div>
+        <div class="stage" id="stage"><div class="world" id="world"></div></div>
+        <div class="ctrlbar">
+          <span>📦 Нугалсан</span><input type="range" id="fold" min="0" max="100" value="0"><span>Дэлгэсэн 📄</span>
+          <button class="btn gold sm" id="foldAnim">▶ Хөдөлгөх</button>
+        </div>
+        <div class="ctrlbar"><span>🔄 Эргүүлэх</span><input type="range" id="spin" min="-60" max="60" value="-20"></div>
+      </div>
+      <div class="card">
+        <div class="def"><b>Дэлгээс</b> — биетийн бүх талсыг ирмэгээр нь залгаатай хавтгай дээр дэлгэсэн дүрс.</div>
+        <h3>🎨 Эсрэг талсуудыг будаарай</h3>
+        <div style="font-size:17px">1) Нэг талс дээр дар. 2) Түүний <b>эсрэг талын</b> талсыг дар.</div>
+        <div class="pairs"><span id="pr0">хос 1 ?</span><span id="pr1">хос 2 ?</span><span id="pr2">хос 3 ?</span></div>
+        <div class="feedback" id="exFb"></div>
+        <div class="def y ans" id="exRule" style="font-size:17px">✅ Тэгш өнцөгт параллелепипед <b>6 талстай</b>, эсрэг талсууд нь <b>хос хосоороо тэнцүү</b>.<br>Гадаргуу = 12+12+8+8+6+6 = <b>52 см.кв</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Net cards 577 -->
+<section class="slide" data-name="Судлах: Аль нь кубийн дэлгээс вэ?" data-min="4" data-stage="ex"
+  data-notes="Сурах бичгийн 577 (ба 578)-р даалгаврын санаа. Хүүхдүүд дэвтэр дээрээ дэлгээсийг толгойдоо “нугалж” үзээд ✓ эсвэл ✗ дарна.|Зөвлөгөө: 2×2 дөрвөлжин орвол болохгүй; нэг эгнээнд 5-6 квадрат болохгүй; хоёр квадрат нэг талс дээр давхцвал болохгүй.|Хариу: А ✓, Б ✗, В ✓, Г ✓, Д ✗, Е ✗, Ж ✓, З ✗.|⭐ Хүүхдүүд цаасан дээр дэлгээсийг зураад хайчилж нугалж шалгаж болно.">
+  <div class="inner">
+    <span class="tag">Алхам ② <b>Судлах</b></span>
+    <h2>🧩 Аль нь кубийн дэлгээс вэ? <span class="muted" style="font-size:20px;font-family:Nunito">(577)</span></h2>
+    <div class="ncards" id="ncards"></div>
+    <div class="row" style="margin-top:8px"><div class="feedback" id="ncFb" style="margin:0"></div></div>
+  </div>
+</section>
+
+<!-- 4. Make: grid -->
+<section class="slide" data-name="Бүтээх: Өөрийн дэлгээсийг зохио" data-min="6" data-stage="mk"
+  data-notes="Торон дээр 6 квадрат сонгоод “✂️ Нугалах” дарна. Программ хайрцгийг өнхрүүлж нугалан шалгана: квадрат бүр аль талс болохыг өнгөөр (хос хосоороо нэг өнгө) харуулна.|Хоёр квадрат нэг талс болбол улаан хүрээгээр тэмдэглэнэ — дэлгээс биш.|⭐⭐⭐ Сорилт: кубийн ялгаатай 11 дэлгээс байдаг. Эргүүлсэн, толин тусгал адил дэлгээсийг нэг гэж тооцно. Аль болох олныг олцгоо!|Цаас, хайч байвал хүүхдүүд олсон дэлгээсээ 5 см-ийн квадратаар зурж хайчлан нугалж болно (х.112-ын үйл ажиллагаа).">
+  <div class="inner">
+    <span class="tag">Алхам ③ <b>Бүтээх</b></span>
+    <h2>✂️ Кубийн дэлгээсээ өөрөө зохио!</h2>
+    <div class="grid2" style="grid-template-columns:1fr 1fr;align-items:start">
+      <div>
+        <div class="mgrid" id="mgrid"></div>
+        <div class="row" style="justify-content:center;margin-top:8px">
+          <button class="btn" id="mFold">✂️ Нугалах</button>
+          <button class="btn ghost sm" id="mClear">↺ Арилгах</button>
+          <button class="btn ghost sm" id="mEx">⭐ Жишээ</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="def y" style="font-size:17px">Хайрцаг <b>6 талстай</b> → 6 квадрат сонго. Өнгө: <span class="sw" style="background:#f19aa4"></span>доод/дээд, <span class="sw" style="background:#f5d36c"></span>урд/ард, <span class="sw" style="background:#8fd3ac"></span>зүүн/баруун.</div>
+        <div class="feedback" id="mFb" style="min-height:56px">👆 Квадратууд дээр дарж сонгоорой. (<span id="mCount">0</span>/6)</div>
+        <h3>⭐⭐⭐ Олсон ялгаатай дэлгээс: <span id="mFoundN">0</span> / 11</h3>
+        <div class="found" id="mFound"></div>
+        <div class="muted" style="font-size:16px;margin-top:6px">Эргүүлсэн, толин тусгал дэлгээсийг нэг гэж тооцно.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Test: calculator -->
+<section class="slide" data-name="Турших: Гадаргуугийн талбайн тооцоолуур" data-min="6" data-stage="ts"
+  data-notes="Гулсуураар урт, өргөн, өндрийг өөрчилнө. Дэлгээсийн талс бүр дээр талбай нь бичигдэнэ, нийт талбай доор гарна.|Хүснэгтийн мөр дээр дарахад тэр хос талс тодорно. Гадаргуу = 2 × (а·b + а·c + b·c).|“🎲 Куб” товч: бүх ирмэг тэнцүү → 6 тэнцүү квадрат → S = 6 × a × a (х.112, 5 см ирмэгтэй куб: 6 × 25 = 150 см.кв).|575-р даалгавар: 10 см, 8 см, 9 см → 2 × (80 + 90 + 72) = 2 × 242 = 484 см.кв. Тооцоолуураар шалгаж болно.">
+  <div class="inner">
+    <span class="tag">Алхам ④ <b>Турших</b></span>
+    <h2>📏 Хайрцгийг бүрэхэд хэдэн см.кв цаас орох вэ?</h2>
+    <div class="grid2" style="grid-template-columns:1.1fr .9fr;align-items:start">
+      <svg class="netsvg" id="netSvg" viewBox="0 0 560 440"></svg>
+      <div class="card">
+        <div class="sl">
+          <span>Урт a</span><input type="range" id="sA" min="1" max="12" value="5"><b id="sAv">5 см</b>
+          <span>Өргөн b</span><input type="range" id="sB" min="1" max="12" value="3"><b id="sBv">3 см</b>
+          <span>Өндөр c</span><input type="range" id="sC" min="1" max="12" value="2"><b id="sCv">2 см</b>
+        </div>
+        <div class="row" style="margin-top:4px"><button class="btn gold sm" id="sCube">🎲 Куб болгох</button><span class="muted" style="font-size:16px" id="sCubeTxt"></span></div>
+        <table class="atab" id="aTab"></table>
+        <div class="total" id="sTot"></div>
+        <div class="calc" style="margin-top:8px;font-size:17px">575. 10×8×9 см хайрцаг → <input id="t575" inputmode="numeric" placeholder="?"> см.кв <button class="btn grn sm" id="t575b">✓</button></div>
+        <div class="feedback" id="t575f" style="font-size:17px;min-height:22px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Improve -->
+<section class="slide" data-name="Сайжруулах: Ижил эзэлхүүн — өөр цаас" data-min="6" data-stage="im"
+  data-notes="24 шоо чихрийг 6 янзаар хайрцаглаж болно. Хайрцаг бүрийг дарж гадаргууг харна — бүгд 24 шоо багтаадаг ч цаас өөр өөр!|Дүгнэлт: шоо хэлбэрт ойр, “бөөрөнхий” хайрцаг бага цаас шаардана. 2×3×4 → 52 см.кв (хамгийн бага), 1×1×24 → 98 см.кв (хамгийн их).|Хүүхдүүдийн эхний таамгийг сануулна.|576-р даалгавар: 2 м 30 см = 230 см = 2,3 м. Нэг талс 2,3 × 2,3 = 5,29 м.кв, 6 талс 31,74 м.кв. 31,74 × 300 = 9 522 г ≈ 9 кг 522 г будаг.">
+  <div class="inner">
+    <span class="tag">Алхам ⑤ <b>Сайжруулах</b></span>
+    <h2>🔧 24 шоо — аль хайрцаг хамгийн хэмнэлттэй вэ?</h2>
+    <div class="grid2" style="grid-template-columns:1.1fr .9fr;align-items:start">
+      <div class="card">
+        <div class="vbtns" id="vBtns"></div>
+        <svg class="boxsvg" id="boxSvg" viewBox="0 0 480 260"></svg>
+        <div id="vTxt" style="font-weight:800;text-align:center;font-size:19px"></div>
+        <svg class="bars" id="vBars" viewBox="0 0 480 150"></svg>
+        <div class="feedback" id="vFb" style="font-size:17px;min-height:22px"></div>
+      </div>
+      <div class="card">
+        <h3>🖌️ Будгийн бодлого (576)</h3>
+        <div style="font-size:18px">1 м.кв талбайг будахад <b>300 г</b> будаг орно. <b>2 м 30 см</b> ирмэгтэй кубийн бүх талсыг будахад хэдэн грамм будаг орох вэ?</div>
+        <div class="calc" style="margin-top:6px">Будаг = <input id="p576" inputmode="decimal" placeholder="?"> г <button class="btn grn sm" id="p576b">✓</button><button class="btn ghost sm" id="p576h">💡 Алхам</button></div>
+        <div class="feedback" id="p576f" style="font-size:17px"></div>
+        <div class="def y ans" id="p576s" style="font-size:16px">① 2 м 30 см = 2,3 м<br>② Нэг талс: 2,3 × 2,3 = 5,29 м.кв<br>③ 6 талс: 6 × 5,29 = 31,74 м.кв<br>④ 31,74 × 300 = <b>9 522 г</b> (≈ 9 кг 522 г)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Practice -->
+<section class="slide" data-name="Цехийн дадлага: Түвшнээ сонго" data-min="5" data-stage="im"
+  data-notes="Хүүхэд бүр өөрийн түвшнээ сонгоно: ⭐ куб (6 × a × a), ⭐⭐ тэгш өнцөгт параллелепипед, ⭐⭐⭐ урвуу бодлого, үнэ, 580/581-ийн санаа.|Тоонууд санамсаргүй гарна — “🎲 Шинэ” товчоор шинэ бодлого авна. Хүүхдүүд дэвтэр дээрээ бодоод хариугаа оруулна.|581: урт 680, өргөн 340, өндөр 498 см → 2 × (231 200 + 338 640 + 169 320) = 1 478 320 см.кв.">
+  <div class="inner">
+    <span class="tag">Дадлага</span>
+    <h2>🎯 Цехийн дадлага</h2>
+    <div class="grid2" style="grid-template-columns:1.2fr .8fr;align-items:start">
+      <div class="card">
+        <div class="lvl"><button class="btn ghost sm on" data-l="1">⭐ Куб</button><button class="btn ghost sm" data-l="2">⭐⭐ Хайрцаг</button><button class="btn ghost sm" data-l="3">⭐⭐⭐ Мастер</button></div>
+        <div class="pq" id="pQ"></div>
+        <div class="calc"><span>Хариу:</span><input id="pIn" inputmode="numeric" placeholder="?"> <span id="pU"></span> <button class="btn grn sm" id="pChk">✓ Шалгах</button><button class="btn gold sm" id="pNew">🎲 Шинэ</button><button class="btn ghost sm" id="pHint">💡</button></div>
+        <div class="feedback" id="pFb"></div>
+        <div class="def y ans" id="pSol" style="font-size:17px"></div>
+      </div>
+      <div class="card mini">
+        <svg id="pSvg" viewBox="0 0 300 200"></svg>
+        <div class="score">🎁 Зөв: <span id="pScore">0</span></div>
+        <div class="muted" style="font-size:16px">Зөв хариулт бүрт нэг бэлэг боогдоно!</div>
+        <div id="pGifts" style="font-size:26px;min-height:34px;word-break:break-all"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Exit -->
+<section class="slide" data-name="Гарах шалгалт ба гэрийн даалгавар" data-min="3" data-stage="im"
+  data-notes="Гарах шалгалт (582): 1) 5 дм ирмэгтэй куб: 6 × 25 = 150 дм.кв. 2) 120 см.кв-ийн 2/3: 120 : 3 × 2 = 80 см.кв. 3) Зурагт байгаа дэлгээс кубийн дэлгээс мөн (3–3 шат хэлбэр).|Өгүүлбэрийг гүйцээж, одоор өөрийгөө үнэлнэ.|Гэрийн даалгавар: 578, 579, 580, 581. 579-ийн зөвлөгөө: 3×4×5 хайрцгийн гадаргуу 94 см.кв < 110 см.кв, гэхдээ дэлгээс 11×10 цаасан дээр багтах эсэхийг зурж шалгана. 580: ирмэг 11/10 болбол талсын талбай 121/100 болж, гадаргуу 21/100-аар нэмэгдэнэ.">
+  <div class="inner">
+    <span class="tag">Шалгалт</span>
+    <h2>🏁 Цехээс гарах тасалбар</h2>
+    <div class="grid2" style="grid-template-columns:1.05fr .95fr;align-items:start">
+      <div class="card">
+        <div class="exq"><div class="q">1. Кубийн ирмэг 5 дм. Гадаргуугийн талбай? (582)</div>
+          <div class="calc"><input data-a="150" inputmode="numeric" placeholder="?"> дм.кв <button class="btn grn sm">✓</button><span class="fb"></span></div></div>
+        <div class="exq"><div class="q">2. Хайрцгийн гадаргуу 120 см.кв. Түүний 2/3-ыг ногоон будав. Будсан хэсэг? (582)</div>
+          <div class="calc"><input data-a="80" inputmode="numeric" placeholder="?"> см.кв <button class="btn grn sm">✓</button><span class="fb"></span></div></div>
+        <div class="exq"><div class="q" style="display:flex;align-items:center;gap:10px">3. Энэ кубийн дэлгээс мөн үү? <svg id="exNet" viewBox="0 0 150 90" style="width:130px;height:78px"></svg></div>
+          <div class="row" id="exYN"><button class="btn ghost sm" data-v="1">✓ Мөн</button><button class="btn ghost sm" data-v="0">✗ Биш</button><span class="fb" style="font-weight:800"></span></div></div>
+      </div>
+      <div class="card">
+        <div class="frames">
+          <div class="fr">Гадаргуугийн талбай гэдэг нь <div contenteditable="true" data-k="m_net_f1" data-ph="бүх талсын талбайн нийлбэр…"></div></div>
+          <div class="fr">Кубийн гадаргуу = <div contenteditable="true" data-k="m_net_f2" data-ph="6 × a × a"></div></div>
+        </div>
+        <div class="row"><b>Өөрийгөө үнэл:</b><div class="stars3" id="stars3"><button>⭐</button><button>⭐</button><button>⭐</button></div></div>
+        <div class="def y" style="font-size:17px;margin-top:6px">🏠 <b>Гэрийн даалгавар:</b> Сурах бичгийн <b>578, 579, 580, 581</b>-р даалгавар. Гэртээ нэг хайрцаг дэлгэж, гадаргуугийн талбайг хэмжиж ол.</div>
+        <p style="font-family:var(--hfont);font-size:26px;text-align:center;margin:6px 0 0;color:var(--red-d)">Баярлалаа, бяцхан урчууд! 🎁🎀</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="nav">
+  <button class="btn" id="prevBtn">◀ Өмнөх</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn" id="nextBtn">Дараах ▶</button>
+</nav>
+<div class="tnotes" id="tnotes"><h4>📝 Багшид зориулсан зөвлөмж</h4><ul id="tnList"></ul></div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ---------- Helpers ---------- */
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rnd(a,b+1));
+const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+const PAIRCOL={A:'#f19aa4',B:'#f5d36c',C:'#8fd3ac'};
+function fb(id,ok,t){const f=typeof id==='string'?$(id):id;f.className=(f.classList.contains('fb')?'fb ':'')+'feedback '+(ok?'ok':'no');f.textContent=t}
+function numIn(v){return parseFloat(String(v).replace(/\s/g,'').replace(',','.'))}
+
+/* ---------- Cube-net checker: roll a cube over the cells ---------- */
+const ROLL={
+  E:s=>({B:s.E,E:s.T,T:s.W,W:s.B,N:s.N,S:s.S}),
+  W:s=>({B:s.W,W:s.T,T:s.E,E:s.B,N:s.N,S:s.S}),
+  S:s=>({B:s.S,S:s.T,T:s.N,N:s.B,E:s.E,W:s.W}),
+  N:s=>({B:s.N,N:s.T,T:s.S,S:s.B,E:s.E,W:s.W})};
+const FACEINFO={B:['Доод','A'],T:['Дээд','A'],N:['Ард','B'],S:['Урд','B'],E:['Баруун','C'],W:['Зүүн','C']};
+function foldNet(cells){ // cells: [[x,y],...]
+  const key=(x,y)=>x+','+y,set=new Set(cells.map(c=>key(c[0],c[1])));
+  if(cells.length!==6)return{ok:false,why:'count'};
+  const face={},order=[];const start=cells[0];
+  const q=[[start[0],start[1],{B:'B',T:'T',N:'N',S:'S',E:'E',W:'W'}]];const seen=new Set([key(start[0],start[1])]);
+  while(q.length){const [x,y,s]=q.shift();face[key(x,y)]=s.B;order.push(key(x,y));
+    [[1,0,'E'],[-1,0,'W'],[0,1,'S'],[0,-1,'N']].forEach(([dx,dy,d])=>{const k=key(x+dx,y+dy);if(set.has(k)&&!seen.has(k)){seen.add(k);q.push([x+dx,y+dy,ROLL[d](s)])}})}
+  if(seen.size!==6)return{ok:false,why:'disc'};
+  const cnt={};Object.values(face).forEach(f=>cnt[f]=(cnt[f]||0)+1);
+  const dups=Object.keys(face).filter(k=>cnt[face[k]]>1);
+  return{ok:dups.length===0,why:dups.length?'dup':'',face,order,dups};
+}
+function canon(cells){let best=null;
+  for(let t=0;t<8;t++){let p=cells.map(([x,y])=>{let a=x,b=y;if(t&4)a=-a;for(let r=0;r<(t&3);r++){const n=-b;b=a;a=n}return[a,b]});
+    const mx=Math.min(...p.map(c=>c[0])),my=Math.min(...p.map(c=>c[1]));const s=p.map(c=>(c[0]-mx)+':'+(c[1]-my)).sort().join('|');if(best===null||s<best)best=s}
+  return best}
+
+/* ---------- Slides & stages ---------- */
+const slides=[...document.querySelectorAll('.slide')];const dots=$('dots');let cur=0;
+const STG=['ch','ex','mk','ts','im'];
+slides.forEach((s,i)=>{const b=document.createElement('button');b.className='dot';b.textContent=i+1;b.title=s.dataset.name;b.onclick=()=>go(i);dots.appendChild(b)});
+function go(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===cur));
+  [...dots.children].forEach((d,j)=>{d.classList.toggle('on',j===cur);d.classList.toggle('done',j<cur)});
+  const s=slides[cur],si=STG.indexOf(s.dataset.stage);
+  document.querySelectorAll('#cycle span').forEach((p,j)=>{p.classList.toggle('on',j===si);p.classList.toggle('done',si>=0&&j<si)});
+  $('stageName').textContent=s.dataset.name;$('stepNo').textContent=(cur+1)+'/'+slides.length;
+  $('tnList').innerHTML='<li>⏱ Зөвлөмж хугацаа: ≈'+s.dataset.min+' мин</li>'+s.dataset.notes.split('|').map(t=>'<li>'+t+'</li>').join('');
+  $('prevBtn').disabled=cur===0;$('nextBtn').textContent=cur===slides.length-1?'🏁 Төгсгөл':'Дараах ▶';
+}
+$('prevBtn').onclick=()=>go(cur-1);$('nextBtn').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  const t=e.target;if(t.isContentEditable||t.tagName==='INPUT'||t.tagName==='TEXTAREA')return;
+  if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);
+  else if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);
+  else if(e.key==='f'||e.key==='F')toggleFS();
+  else if(e.key==='n'||e.key==='N')toggleNotes();
+});
+function toggleFS(){if(!document.fullscreenElement){if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen()}else if(document.exitFullscreen)document.exitFullscreen()}
+function toggleNotes(){$('tnotes').classList.toggle('show')}
+$('fsBtn').onclick=toggleFS;$('notesBtn').onclick=toggleNotes;
+
+/* ---------- Timer ---------- */
+let remain=40*60,running=false,tick=null;
+function drawT(){const a=Math.abs(remain),m=Math.floor(a/60),s=a%60;$('tval').textContent=(remain<0?'+':'')+m+':'+String(s).padStart(2,'0');$('timer').className='timer'+(remain<0?' over':remain<=300?' warn':'')}
+$('tPlay').onclick=()=>{running=!running;$('tPlay').textContent=running?'⏸':'▶';if(running)tick=setInterval(()=>{remain--;drawT()},1000);else clearInterval(tick)};
+$('timer').ondblclick=()=>{remain=40*60;drawT()};drawT();
+
+/* ---------- Editable frames ---------- */
+document.querySelectorAll('[data-k]').forEach(e=>{const k=e.dataset.k;e.textContent=store.get(k)||'';e.addEventListener('input',()=>store.set(k,e.innerText))});
+
+/* ================= Oblique box drawing (shared) ================= */
+function drawBox(svg,X,H,D,opt){ // X wide, H tall, D deep (unit cubes)
+  opt=opt||{};const VW=+svg.getAttribute('viewBox').split(' ')[2],VH=+svg.getAttribute('viewBox').split(' ')[3];
+  const kx=.55,ky=.42,pad=opt.pad||10;const s=Math.min((VW-2*pad)/(X+D*kx),(VH-2*pad)/(H+D*ky));
+  const w=X*s,h=H*s,dx=D*s*kx,dy=D*s*ky;const x0=(VW-w-dx)/2,y0=(VH-h-dy)/2+dy;
+  const g=el('g',{},svg);
+  el('polygon',{points:`${x0},${y0} ${x0+dx},${y0-dy} ${x0+w+dx},${y0-dy} ${x0+w},${y0}`,fill:'#e0525f',stroke:'#7a1420','stroke-width':2},g);
+  el('polygon',{points:`${x0+w},${y0} ${x0+w+dx},${y0-dy} ${x0+w+dx},${y0+h-dy} ${x0+w},${y0+h}`,fill:'#9c1222',stroke:'#7a1420','stroke-width':2},g);
+  el('rect',{x:x0,y:y0,width:w,height:h,fill:'url(#dots_'+svg.id+')',stroke:'#7a1420','stroke-width':2},g);
+  if(opt.grid){const ln=(a,b,c,d)=>el('line',{x1:a,y1:b,x2:c,y2:d,stroke:'rgba(255,255,255,.55)','stroke-width':1},g);
+    for(let i=1;i<X;i++){ln(x0+i*s,y0,x0+i*s,y0+h);ln(x0+i*s,y0,x0+i*s+dx,y0-dy)}
+    for(let j=1;j<H;j++){ln(x0,y0+j*s,x0+w,y0+j*s);ln(x0+w,y0+j*s,x0+w+dx,y0+j*s-dy)}
+    for(let k=1;k<D;k++){const ox=k*s*kx,oy=k*s*ky;ln(x0+ox,y0-oy,x0+w+ox,y0-oy);ln(x0+w+ox,y0-oy,x0+w+ox,y0+h-oy)}}
+  // ribbon
+  el('rect',{x:x0+w/2-Math.max(3,s*.12),y:y0,width:Math.max(6,s*.24),height:h,fill:'#e8b524',opacity:.95},g);
+  el('polygon',{points:`${x0+w/2-Math.max(3,s*.12)},${y0} ${x0+w/2-Math.max(3,s*.12)+dx},${y0-dy} ${x0+w/2+Math.max(3,s*.12)+dx},${y0-dy} ${x0+w/2+Math.max(3,s*.12)},${y0}`,fill:'#f5cd4a'},g);
+  return{x0,y0,w,h,dx,dy,s}}
+function dotsPattern(svg,r){const d=el('defs',{},svg);const p=el('pattern',{id:'dots_'+svg.id,width:r*3,height:r*3,patternUnits:'userSpaceOnUse'},d);
+  el('rect',{width:r*3,height:r*3,fill:'#c4162a'},p);el('circle',{cx:r*1.5,cy:r*1.5,r:r*.55,fill:'#fff',opacity:.8},p)}
+
+/* ================= 1. Challenge ================= */
+const GUESS=[{k:'А',d:[24,1,1]},{k:'Б',d:[6,2,2]},{k:'В',d:[4,3,2]}];
+let myGuess=null;
+GUESS.forEach((g,i)=>{const b=document.createElement('div');b.className='bx3';const sv=document.createElementNS(SVGNS,'svg');sv.id='gs'+i;sv.setAttribute('viewBox','0 0 200 100');b.appendChild(sv);
+  const t=document.createElement('div');t.textContent=g.k+': '+g.d.join('×')+' см';b.appendChild(t);
+  dotsPattern(sv,5);drawBox(sv,g.d[0],g.d[2],g.d[1],{pad:6});
+  b.onclick=()=>{myGuess=i;document.querySelectorAll('.bx3').forEach((x,j)=>x.classList.toggle('on',j===i));fb('guessFb',true,'📌 Таны таамаг: '+g.k+'. “Сайжруулах” алхамд шалгана!')};
+  $('guess').appendChild(b)});
+const CNT=[['Талс',6],['Орой',8],['Ирмэг',12]];const cntV=[0,0,0];
+CNT.forEach(([n],i)=>{const d=document.createElement('div');d.innerHTML=`${n}<span class="n" id="cn${i}">0</span><button data-d="-1">−</button><button data-d="1">+</button>`;
+  d.querySelectorAll('button').forEach(b=>b.onclick=()=>{cntV[i]=Math.max(0,cntV[i]+(+b.dataset.d));$('cn'+i).textContent=cntV[i];d.className=''});$('cnt').appendChild(d)});
+$('cntChk').onclick=()=>{let all=true;[...$('cnt').children].forEach((d,i)=>{const ok=cntV[i]===CNT[i][1];d.className=ok?'ok':'no';if(!ok)all=false});
+  if(all){fb('cntFb',true,'🎉 Зөв! 6 талс, 8 орой, 12 ирмэг.');confetti(50)}else fb('cntFb',false,'🤔 Хайрцгаа дахин тоолоорой.')};
+
+/* ================= 2. Explore 3D ================= */
+const U=40,EL=4,EW=3,EH=2,L=EL*U,W=EW*U,H=EH*U;
+const F3={
+  bottom:{n:'Доод',p:'A',a:EL,b:EW,css:{left:-L/2,top:-W/2,width:L,height:W}},
+  back:{n:'Ард',p:'B',a:EL,b:EH,par:'bottom',css:{left:0,top:-H,width:L,height:H},o:'50% 100%',r:t=>`rotateX(${-t}deg)`},
+  top:{n:'Дээд',p:'A',a:EL,b:EW,par:'back',css:{left:0,top:-W,width:L,height:W},o:'50% 100%',r:t=>`rotateX(${-t}deg)`},
+  front:{n:'Урд',p:'B',a:EL,b:EH,par:'bottom',css:{left:0,top:W,width:L,height:H},o:'50% 0',r:t=>`rotateX(${t}deg)`},
+  left:{n:'Зүүн',p:'C',a:EH,b:EW,par:'bottom',css:{left:-H,top:0,width:H,height:W},o:'100% 50%',r:t=>`rotateY(${t}deg)`},
+  right:{n:'Баруун',p:'C',a:EH,b:EW,par:'bottom',css:{left:L,top:0,width:H,height:W},o:'0 50%',r:t=>`rotateY(${-t}deg)`}};
+const OPP={bottom:'top',top:'bottom',front:'back',back:'front',left:'right',right:'left'};
+const fEl={};
+['bottom','back','top','front','left','right'].forEach(k=>{const f=F3[k],d=document.createElement('div');d.className='face';d.id='fx-'+k;
+  for(const c in f.css)d.style[c]=f.css[c]+'px';if(f.o)d.style.transformOrigin=f.o;
+  d.innerHTML=`<span class="lab">${f.n}<br>${f.a}×${f.b}=${f.a*f.b}</span>`;fEl[k]=d;(f.par?fEl[f.par]:$('world')).appendChild(d);
+  d.addEventListener('click',e=>{e.stopPropagation();pickFace(k)})});
+let foldT=0,spin=-20;
+function setFold(){const th=(1-foldT)*90;for(const k in F3)if(F3[k].r)fEl[k].style.transform=F3[k].r(th);
+  $('world').style.transform=`translateY(${-30+foldT*20}px) rotateX(${52+foldT*6}deg) rotateZ(${spin}deg)`}
+$('fold').oninput=e=>{foldT=e.target.value/100;setFold()};
+$('spin').oninput=e=>{spin=+e.target.value;setFold()};
+let fAnim=null;
+$('foldAnim').onclick=()=>{if(fAnim)return;const from=foldT,to=foldT>.5?0:1,t0=performance.now();
+  const st=n=>{const k=Math.min(1,(n-t0)/1600),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;foldT=from+(to-from)*e;$('fold').value=Math.round(foldT*100);setFold();if(k<1)fAnim=requestAnimationFrame(st);else fAnim=null};fAnim=requestAnimationFrame(st)};
+let selF=null;const pairDone={};
+function pickFace(k){if(fEl[k].classList.contains('p'+F3[k].p)&&pairDone[F3[k].p])return;
+  if(!selF){selF=k;fEl[k].classList.add('sel');fb('exFb',true,'👉 '+F3[k].n+' талс сонгогдлоо. Одоо эсрэг талсыг дар.');return}
+  if(selF===k){fEl[k].classList.remove('sel');selF=null;$('exFb').textContent='';return}
+  const a=selF;fEl[a].classList.remove('sel');selF=null;
+  if(OPP[a]===k){const p=F3[k].p;pairDone[p]=true;fEl[a].classList.add('p'+p);fEl[k].classList.add('p'+p);
+    const n=Object.keys(pairDone).length;const sp=$('pr'+(n-1));sp.className='p'+p;sp.textContent=F3[a].n+' ↔ '+F3[k].n;
+    fb('exFb',true,`🎉 Зөв! ${F3[a].n} ба ${F3[k].n}: хоёулаа ${F3[k].a}×${F3[k].b} = ${F3[k].a*F3[k].b} см.кв`);confetti(30);
+    if(n===3){$('exRule').classList.add('show');confetti(80)}}
+  else{[a,k].forEach(x=>{fEl[x].classList.remove('shake');void fEl[x].offsetWidth;fEl[x].classList.add('shake')});
+    fb('exFb',false,'🤔 '+F3[a].n+' ба '+F3[k].n+' нь хөрш (нэг ирмэгтэй). Хайрцгийг нугалж харж байгаад дахин оролдоорой.')}}
+setFold();
+
+/* ================= 3. Net cards (577) ================= */
+const NETS=[
+  [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]],
+  [[0,0],[1,0],[2,0],[3,0],[4,0],[5,0]],
+  [[0,0],[1,0],[1,1],[2,1],[2,2],[3,2]],
+  [[0,0],[1,0],[2,0],[2,1],[3,1],[4,1]],
+  [[0,0],[1,0],[0,1],[1,1],[2,1],[3,1]],
+  [[0,1],[1,1],[2,1],[3,1],[0,0],[2,0]],
+  [[0,0],[0,1],[1,1],[2,1],[3,1],[3,2]],
+  [[0,0],[2,0],[0,1],[1,1],[2,1],[1,2]]];
+const LET='АБВГДЕЖЗ';let ncDone=0,ncRight=0;
+function drawNetSvg(svg,cells,col){const mx=Math.max(...cells.map(c=>c[0]))+1,my=Math.max(...cells.map(c=>c[1]))+1;const vb=svg.getAttribute('viewBox').split(' ').map(Number);
+  const s=Math.min((vb[2]-10)/mx,(vb[3]-10)/my),ox=(vb[2]-mx*s)/2,oy=(vb[3]-my*s)/2;
+  cells.forEach(([x,y])=>el('rect',{x:ox+x*s,y:oy+y*s,width:s,height:s,fill:col||'#e9cfa6',stroke:'#7a5530','stroke-width':2,'stroke-dasharray':'5 3'},svg))}
+NETS.forEach((cells,i)=>{const ok=foldNet(cells).ok;const d=document.createElement('div');d.className='nc';
+  d.innerHTML=`<div class="lt">${LET[i]}</div><svg viewBox="0 0 200 130"></svg><div class="row"><button data-v="1">✓ Тийм</button><button data-v="0">✗ Үгүй</button></div>`;
+  drawNetSvg(d.querySelector('svg'),cells);
+  d.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;const right=(b.dataset.v==='1')===ok;
+    d.classList.add(ok?'ok':'no');d.querySelector('.row').innerHTML=`<b>${right?'🎉 Зөв!':'😮 Буруу.'} ${ok?'Дэлгээс мөн':'Дэлгээс биш'}</b>`;
+    ncDone++;if(right)ncRight++;fb('ncFb',true,`📊 ${ncDone}/8 шалгасан · ${ncRight} зөв`);if(right)confetti(20);if(ncDone===8&&ncRight>=6)confetti(90)});
+  $('ncards').appendChild(d)});
+
+/* ================= 4. Make: grid net validator ================= */
+const mOn=new Set();const mBtn=[];const mFoundSet=new Set(JSON.parse(store.get('m_net_found')||'[]'));
+for(let y=0;y<6;y++)for(let x=0;x<6;x++){const b=document.createElement('button');b.dataset.k=x+','+y;
+  b.onclick=()=>{const k=b.dataset.k;if(mOn.has(k))mOn.delete(k);else{if(mOn.size>=6){fb('mFb',false,'✋ 6-аас олон квадрат хэрэггүй — хайрцаг 6 талстай.');return}mOn.add(k)}mReset()};
+  mBtn.push(b);$('mgrid').appendChild(b)}
+function mReset(){mBtn.forEach(b=>{b.className=mOn.has(b.dataset.k)?'on':'';b.innerHTML=''});$('mFb').className='feedback';$('mFb').innerHTML=`👆 Квадратууд дээр дарж сонгоорой. (<span id="mCount">${mOn.size}</span>/6)`}
+function mFoundDraw(){$('mFound').innerHTML='';for(let i=0;i<11;i++){const s=document.createElement('span');if(i<mFoundSet.size){s.className='on';s.textContent='✓'}else s.textContent=i+1;$('mFound').appendChild(s)}$('mFoundN').textContent=mFoundSet.size}
+mFoundDraw();
+let mBusy=false;
+$('mFold').onclick=()=>{if(mBusy)return;const cells=[...mOn].map(k=>k.split(',').map(Number));
+  if(cells.length!==6){fb('mFb',false,`🤔 ${cells.length} квадрат байна. Яг 6 квадрат хэрэгтэй!`);return}
+  const r=foldNet(cells);
+  if(r.why==='disc'){fb('mFb',false,'✂️ Квадратууд хоорондоо ирмэгээрээ залгаагүй байна — тасархай дэлгээс нугалагдахгүй.');return}
+  mBusy=true;mReset();const byK={};mBtn.forEach(b=>byK[b.dataset.k]=b);
+  r.order.forEach((k,i)=>setTimeout(()=>{const b=byK[k],f=r.face[k];b.className='on f'+FACEINFO[f][1]+' pop';b.textContent=FACEINFO[f][0];
+    if(i===5)setTimeout(()=>{mBusy=false;
+      if(r.ok){const c=canon(cells);const isNew=!mFoundSet.has(c);mFoundSet.add(c);store.set('m_net_found',JSON.stringify([...mFoundSet]));mFoundDraw();
+        fb('mFb',true,isNew?`🎉 Хайрцаг болж нугалагдлаа! Шинэ дэлгээс олов (${mFoundSet.size}/11).`:'🎉 Кубийн дэлгээс мөн! Гэхдээ энэ дэлгээсийг аль хэдийн олсон — өөрийг олоорой.');confetti(isNew?80:30)}
+      else{r.dups.forEach(k=>byK[k].classList.add('dup'));fb('mFb',false,'❌ Улаан хүрээтэй квадратууд нэг талс дээр давхцаж байна — тэгвэл нэг талс задгай үлдэнэ. Өөрчлөөд дахин нугал.')}},350)},i*260))};
+$('mClear').onclick=()=>{if(mBusy)return;mOn.clear();mReset()};
+let exI=0;const EXN=[NETS[0],NETS[2],NETS[3]];
+$('mEx').onclick=()=>{if(mBusy)return;mOn.clear();EXN[exI%3].forEach(([x,y])=>mOn.add((x+1)+','+(y+1)));exI++;mReset()};
+
+/* ================= 5. Surface area calculator ================= */
+let cubeLock=false;
+function sDraw(){const a=+$('sA').value,b=+$('sB').value,c=+$('sC').value;
+  $('sAv').textContent=a+' см';$('sBv').textContent=b+' см';$('sCv').textContent=c+' см';
+  const svg=$('netSvg');svg.innerHTML='';
+  const NW=2*c+a,NH=2*c+2*b,s=Math.min(540/NW,420/NH),ox=(560-NW*s)/2,oy=(440-NH*s)/2;
+  const F=[['Ард',c,0,a,c,'B'],['Зүүн',0,c,c,b,'C'],['Доод',c,c,a,b,'A'],['Баруун',c+a,c,c,b,'C'],['Урд',c,c+b,a,c,'B'],['Дээд',c,2*c+b,a,b,'A']];
+  F.forEach(([n,x,y,w,h,p])=>{const g=el('g',{class:'fp',['data-p']:p},svg);
+    el('rect',{x:ox+x*s,y:oy+y*s,width:w*s,height:h*s,fill:PAIRCOL[p],stroke:'#7a5530','stroke-width':2.5,'stroke-dasharray':'7 4'},g);
+    const fs=Math.max(11,Math.min(22,Math.min(w*s,h*s)/3.2));
+    if(w*s>34&&h*s>22)el('text',{x:ox+(x+w/2)*s,y:oy+(y+h/2)*s+fs*.35,'text-anchor':'middle','font-size':fs,'font-weight':900,fill:'#3a2412','font-family':'Nunito,sans-serif'},g,`${w}×${h}=${w*h}`)});
+  const ab=a*b,ac=a*c,bc=b*c,S=2*(ab+ac+bc);
+  $('aTab').innerHTML=`<tr data-p="A"><td><span class="sw" style="background:${PAIRCOL.A}"></span>Доод + Дээд</td><td>2 × ${a}×${b}</td><td><b>${2*ab}</b></td></tr>
+   <tr data-p="B"><td><span class="sw" style="background:${PAIRCOL.B}"></span>Урд + Ард</td><td>2 × ${a}×${c}</td><td><b>${2*ac}</b></td></tr>
+   <tr data-p="C"><td><span class="sw" style="background:${PAIRCOL.C}"></span>Зүүн + Баруун</td><td>2 × ${b}×${c}</td><td><b>${2*bc}</b></td></tr>`;
+  $('sTot').textContent=`S = ${2*ab} + ${2*ac} + ${2*bc} = ${S} см.кв`;
+  $('sCubeTxt').textContent=(a===b&&b===c)?`Куб: 6 × ${a}×${a} = ${6*a*a} см.кв ✓`:'';
+  $('aTab').querySelectorAll('tr').forEach(tr=>tr.onclick=()=>{const p=tr.dataset.p,on=!tr.classList.contains('hl');
+    $('aTab').querySelectorAll('tr').forEach(t=>t.classList.toggle('hl',on&&t===tr));
+    svg.querySelectorAll('.fp').forEach(g=>g.setAttribute('opacity',on&&g.dataset.p!==p?.25:1))})}
+['sA','sB','sC'].forEach(id=>$(id).oninput=e=>{if(cubeLock){['sA','sB','sC'].forEach(j=>$(j).value=e.target.value)}sDraw()});
+$('sCube').onclick=()=>{cubeLock=!cubeLock;$('sCube').textContent=cubeLock?'🔓 Куб болиулах':'🎲 Куб болгох';if(cubeLock){const v=$('sA').value;$('sB').value=v;$('sC').value=v}sDraw()};
+sDraw();
+$('t575b').onclick=()=>{const v=numIn($('t575').value);if(v===484){$('t575').className='ok';fb('t575f',true,'🎉 Зөв! 2 × (80 + 90 + 72) = 484 см.кв');confetti(50)}else{$('t575').className='no';fb('t575f',false,'🤔 Гулсуураар 10, 8, 9 болгоод шалгаарай.')}};
+
+/* ================= 6. Improve: same volume ================= */
+const VB=[[24,1,1],[12,2,1],[8,3,1],[6,4,1],[6,2,2],[4,3,2]];const vSeen={};
+const SA=d=>2*(d[0]*d[1]+d[0]*d[2]+d[1]*d[2]);
+dotsPattern($('boxSvg'),6);
+VB.forEach((d,i)=>{const b=document.createElement('button');b.textContent=d.join('×');b.onclick=()=>vShow(i);$('vBtns').appendChild(b)});
+function vShow(i){const d=VB[i];vSeen[i]=SA(d);[...$('vBtns').children].forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('seen',j in vSeen)});
+  const svg=$('boxSvg');[...svg.querySelectorAll('g')].forEach(g=>g.remove());drawBox(svg,d[0],d[2],d[1],{grid:true,pad:14});
+  $('vTxt').innerHTML=`${d.join(' × ')} = <b>24</b> шоо · Цаас: 2 × (${d[0]*d[1]} + ${d[0]*d[2]} + ${d[1]*d[2]}) = <b style="color:#8f0e1d">${SA(d)} см.кв</b>`;
+  vBars();if(Object.keys(vSeen).length===6){const best=VB.reduce((m,x)=>SA(x)<SA(m)?x:m);const g=myGuess===2;
+    fb('vFb',true,`🏆 Хамгийн бага: ${best.join('×')} → ${SA(best)} см.кв. Шоо хэлбэрт ойр хайрцаг цаас хэмнэнэ! ${myGuess===null?'':g?'Таны таамаг зөв байсан! 🎉':'Таны таамаг: '+GUESS[myGuess].k+' — одоо мэдлээ!'}`);confetti(90)}}
+function vBars(){const svg=$('vBars');svg.innerHTML='';const mx=100;VB.forEach((d,i)=>{const x=10+i*78,v=vSeen[i];
+  el('text',{x:x+33,y:146,'text-anchor':'middle','font-size':15,'font-weight':800,fill:'#3a2412'},svg,d.join('×'));
+  if(v!=null){const h=v/mx*105;el('rect',{x:x+8,y:128-h,width:50,height:h,rx:4,fill:v===52?'#2f8f5b':'#c4162a'},svg);el('text',{x:x+33,y:122-h,'text-anchor':'middle','font-size':16,'font-weight':900,fill:'#3a2412'},svg,v)}
+  else el('text',{x:x+33,y:118,'text-anchor':'middle','font-size':22,fill:'#7a5530'},svg,'?')})}
+vBars();vShow(0);
+$('p576b').onclick=()=>{const v=numIn($('p576').value);if(v===9522){$('p576').className='ok';fb('p576f',true,'🎉 Зөв! 9 522 г ≈ 9 кг 522 г будаг.');confetti(60)}else{$('p576').className='no';fb('p576f',false,'🤔 Эхлээд 2 м 30 см-ийг метрээр бич: 2,3 м.')}};
+$('p576h').onclick=()=>$('p576s').classList.toggle('show');
+
+/* ================= 7. Practice ================= */
+let pL=1,pCur=null,pScore=0;
+function pGen(){const svg=$('pSvg');svg.innerHTML='';dotsPattern(svg,5);let q;
+  if(pL===1){const a=ri(2,9);q={q:`Кубийн ирмэг <b>${a} см</b>. Түүнийг бүрэхэд хэдэн см.кв цаас орох вэ?`,a:6*a*a,u:'см.кв',s:`Нэг талс: ${a} × ${a} = ${a*a}. Куб 6 талстай: 6 × ${a*a} = ${6*a*a} см.кв`};drawBox(svg,1,1,1,{pad:30});el('text',{x:150,y:196,'text-anchor':'middle','font-size':18,'font-weight':900,fill:'#3a2412'},svg,'a = '+a+' см')}
+  else if(pL===2){let l=ri(3,12),w=ri(2,10),h=ri(2,9);while(w===l)w=ri(2,10);q={q:`Хайрцгийн урт <b>${l} см</b>, өргөн <b>${w} см</b>, өндөр <b>${h} см</b>. Гадаргуугийн талбай?`,a:SA([l,w,h]),u:'см.кв',s:`2 × (${l}×${w} + ${l}×${h} + ${w}×${h}) = 2 × (${l*w} + ${l*h} + ${w*h}) = ${SA([l,w,h])} см.кв`};
+    drawBox(svg,l,h,w,{pad:16});el('text',{x:150,y:196,'text-anchor':'middle','font-size':17,'font-weight':900,fill:'#3a2412'},svg,`${l} × ${w} × ${h} см`)}
+  else{const t=ri(0,3);
+    if(t===0){const a=ri(2,12);q={q:`Кубийн гадаргуугийн талбай <b>${6*a*a} см.кв</b>. Ирмэг нь хэдэн см вэ?`,a:a,u:'см',s:`Нэг талс: ${6*a*a} : 6 = ${a*a}. ${a} × ${a} = ${a*a} → ирмэг ${a} см`}}
+    else if(t===1){const l=ri(4,10),w=ri(2,6),h=ri(2,6),p=ri(2,5);q={q:`${l}×${w}×${h} см хайрцгийг бүрнэ. 1 см.кв бэлгийн цаас <b>${p}₮</b>. Цаас хэдэн төгрөг вэ?`,a:SA([l,w,h])*p,u:'₮',s:`S = 2 × (${l*w} + ${l*h} + ${w*h}) = ${SA([l,w,h])} см.кв. ${SA([l,w,h])} × ${p} = ${SA([l,w,h])*p}₮`}}
+    else if(t===2){const a=ri(2,6);q={q:`Кубийн ирмэгийг <b>2 дахин</b> уртасгавал (${a} см → ${2*a} см) гадаргуу нь хэд дахин ихсэх вэ?`,a:4,u:'дахин',s:`${6*a*a} см.кв → 6 × ${2*a}×${2*a} = ${24*a*a} см.кв. ${24*a*a} : ${6*a*a} = 4 дахин`}}
+    else q={q:'581. Урт 680 см, өргөн нь уртаасаа 2 дахин бага, өндөр нь уртаасаа 182 см-ээр богино. Гадаргуу?',a:1478320,u:'см.кв',s:'Өргөн 340, өндөр 498. 2 × (231 200 + 338 640 + 169 320) = 2 × 739 160 = 1 478 320 см.кв'};
+    drawBox(svg,3,2,2,{pad:30})}
+  pCur=q;$('pQ').innerHTML=q.q;$('pU').textContent=q.u;$('pIn').value='';$('pIn').className='';$('pFb').textContent='';$('pSol').classList.remove('show');$('pSol').textContent=q.s;pCur.done=false}
+document.querySelectorAll('.lvl button').forEach(b=>b.onclick=()=>{pL=+b.dataset.l;document.querySelectorAll('.lvl button').forEach(x=>x.classList.toggle('on',x===b));pGen()});
+$('pChk').onclick=()=>{const v=numIn($('pIn').value);if(v===pCur.a){$('pIn').className='ok';fb('pFb',true,'🎉 Зөв! Бэлэг боогдлоо.');if(!pCur.done){pCur.done=true;pScore++;$('pScore').textContent=pScore;$('pGifts').textContent+='🎁';confetti(30)}}else{$('pIn').className='no';fb('pFb',false,'🤔 Дахин бодоорой. 💡 товчоор зөвлөгөө ав.')}};
+$('pNew').onclick=pGen;$('pHint').onclick=()=>$('pSol').classList.toggle('show');
+$('pIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('pChk').click()});
+pGen();
+
+/* ================= 8. Exit ================= */
+document.querySelectorAll('.exq input[data-a]').forEach(inp=>{const b=inp.parentNode.querySelector('button'),f=inp.parentNode.querySelector('.fb');
+  b.onclick=()=>{const ok=numIn(inp.value)===+inp.dataset.a;inp.className=ok?'ok':'no';fb(f,ok,ok?'✅ Зөв!':'🤔 Дахин');if(ok)confetti(25)}});
+const EXNET=NETS[3];drawNetSvg($('exNet'),EXNET);const exOk=foldNet(EXNET).ok;
+$('exYN').querySelectorAll('button').forEach(b=>b.onclick=()=>{const ok=(b.dataset.v==='1')===exOk;fb($('exYN').querySelector('.fb'),ok,ok?'✅ Зөв! 3–3 шат хэлбэр нугалагдана.':'🤔 Толгойдоо нугалж үзээрэй.');if(ok)confetti(25)});
+(()=>{const b=[...document.querySelectorAll('#stars3 button')];const set=n=>{b.forEach((x,i)=>x.classList.toggle('on',i<n));store.set('m_net_stars',n)};b.forEach((x,i)=>x.onclick=()=>{set(i+1);if(i===2)confetti(60)});set(+(store.get('m_net_stars')||0))})();
+
+/* ================= Confetti: polka dots + ribbon strips ================= */
+const cf=$('confetti'),cfx=cf.getContext('2d');let parts=[],cRun=false;
+function confetti(n){cf.width=innerWidth;cf.height=innerHeight;const cols=['#c4162a','#d9a21b','#ffe08a','#fffaf0','#2f8f5b','#b48a57'];
+  for(let i=0;i<n;i++)parts.push({x:innerWidth/2+rnd(-160,160),y:innerHeight*.45,vx:rnd(-7,7),vy:-rnd(4,18),s:rnd(6,12),c:cols[i%6],r:rnd(0,6),k:i%3,life:130});
+  if(!cRun){cRun=true;requestAnimationFrame(cStep)}}
+function cStep(){cfx.clearRect(0,0,cf.width,cf.height);parts.forEach(p=>{p.vy+=.4;p.x+=p.vx;p.y+=p.vy;p.r+=.15;p.life--;cfx.save();cfx.translate(p.x,p.y);cfx.rotate(p.r);cfx.fillStyle=p.c;
+    if(p.k===0){cfx.beginPath();cfx.arc(0,0,p.s/2,0,7);cfx.fill()}
+    else if(p.k===1){cfx.fillRect(-p.s,-p.s/5,p.s*2,p.s/2.5)}
+    else{cfx.strokeStyle=p.c;cfx.lineWidth=3;cfx.beginPath();cfx.moveTo(-p.s,0);cfx.quadraticCurveTo(-p.s/2,-p.s,0,0);cfx.quadraticCurveTo(p.s/2,p.s,p.s,0);cfx.stroke()}
+    cfx.restore()});
+  parts=parts.filter(p=>p.life>0&&p.y<cf.height+20);if(parts.length)requestAnimationFrame(cStep);else{cRun=false;cfx.clearRect(0,0,cf.width,cf.height)}}
+
+go(0);
+</script>
+</body>
+</html>
